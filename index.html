@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Pizza Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cormorant', 'Playfair Display', serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4efe9;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #8b4513;
+            font-size: 2.5em; /* Increased text size */
+        }
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        label {
+            font-weight: bold;
+            font-size: 1.2em; /* Increased text size */
+        }
+        input, select, button {
+            width: 90%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1.2em; /* Increased text size */
+        }
+        button {
+            background-color: #8b4513;
+            color: white;
+            font-size: 0.9em; /* Slightly smaller button text */
+            padding: 8px 12px; /* Smaller buttons */
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #a0522d;
+        }
+        .output {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .output h3 {
+            color: #8b4513;
+        }
+        .pizza-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .pizza-item img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        .error {
+            border-color: red;
+        }
+        .error-message {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create Your Custom Pizza Store</h1>
+    <form id="pizza-form">
+        <div class="form-step active" data-step="1">
+            <div>
+                <label for="store-name">Store Name:</label>
+                <input type="text" id="store-name" placeholder="Enter your store's name" required>
+            </div>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+        <div class="form-step" data-step="2">
+            <div>
+                <label for="store-slogan">Store Slogan:</label>
+                <input type="text" id="store-slogan" placeholder="Enter your store's slogan" required>
+            </div>
+            <button type="button" onclick="prevStep()">Back</button>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+        <div class="form-step" data-step="3">
+            <div>
+                <label for="pizza-count">Number of Pizzas:</label>
+                <select id="pizza-count" required>
+                    <option value="">Select number of pizzas</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+            <button type="button" onclick="prevStep()">Back</button>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+        <div id="pizza-fields-container"></div>
+        <div class="form-step" data-step="100">
+            <div>
+                <label for="drinks-menu">Drinks Menu:</label>
+                <div id="drinks-menu" class="checkbox-group">
+                    <label><input type="checkbox" value="Cola, 1.99"> Cola - ₺1.99</label>
+                    <label><input type="checkbox" value="Lemonade, 2.49"> Lemonade - ₺2.49</label>
+                    <label><input type="checkbox" value="Water, 0.99"> Water - ₺0.99</label>
+                    <label><input type="checkbox" value="Iced Tea, 2.29"> Iced Tea - ₺2.29</label>
+                    <label><input type="checkbox" value="Ayran, 1.50"> Ayran - ₺1.50</label>
+                    <label><input type="checkbox" value="Red Wine, 4.99"> Red Wine - ₺4.99</label>
+                    <label><input type="checkbox" value="Sprite, 1.80"> Sprite - ₺1.80</label>
+                    <label><input type="checkbox" value="Black Tea, 0.75"> Black Tea - ₺0.75</label>
+                    <label><input type="checkbox" value="Fanta, 1.80"> Fanta - ₺1.80</label>
+                </div>
+            </div>
+            <button type="button" onclick="prevStep()">Back</button>
+            <button type="submit">Generate Store</button>
+        </div>
+    </form>
+
+    <div id="output" class="output" style="display:none;">
+        <h2 id="output-store-name"></h2>
+        <h3 id="output-store-slogan"></h3>
+        <div>
+            <h3>Pizza Menu:</h3>
+            <div id="output-pizza-menu"></div>
+        </div>
+        <div>
+            <h3>Drinks Menu:</h3>
+            <ul id="output-drinks-menu"></ul>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+
+        function validateStep(step) {
+            const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value || (input.type === 'number' && input.value <= 0)) {
+                    isValid = false;
+                    input.classList.add('error');
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+
+            return isValid;
+        }
+
+        function showErrorMessage(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+
+            const currentStep = document.querySelector('.form-step.active');
+            const existingError = currentStep.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            currentStep.insertBefore(errorDiv, currentStep.firstChild);
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(element => {
+                element.classList.remove('active');
+                if (parseInt(element.getAttribute('data-step')) === step) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        function nextStep() {
+            if (!validateStep(currentStep)) {
+                showErrorMessage('Please fill in all required fields with valid values.');
+                return;
+            }
+
+            currentStep++;
+            const pizzaCount = parseInt(document.getElementById('pizza-count').value);
+            if (currentStep > 3 && currentStep <= 3 + pizzaCount) {
+                showStep(currentStep);
+            } else if (currentStep === 4 + pizzaCount) {
+                showStep(100);
+            } else {
+                showStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            currentStep--;
+            showStep(currentStep);
+        }
+
+        function generatePizzaFields(pizzaCount) {
+            const pizzaFieldsContainer = document.getElementById('pizza-fields-container');
+            pizzaFieldsContainer.innerHTML = '';
+            for (let i = 1; i <= pizzaCount; i++) {
+                const pizzaDiv = document.createElement('div');
+                pizzaDiv.classList.add('form-step');
+                pizzaDiv.setAttribute('data-step', 3 + i);
+                pizzaDiv.innerHTML = `
+                    <h3>Pizza ${i}</h3>
+                    <div>
+                        <label for="pizza-name-${i}">Pizza Name:</label>
+                        <input type="text" id="pizza-name-${i}" placeholder="Enter pizza name" required>
+                    </div>
+                    <div>
+                        <label>Ingredients (Choose up to 4):</label>
+                        <div id="pizza-ingredients-${i}" class="checkbox-group">
+                            <label><input type="checkbox" value="anchovies"> Anchovies</label>
+                            <label><input type="checkbox" value="bacon"> Bacon</label>
+                            <label><input type="checkbox" value="basil leaves"> Basil Leaves</label>
+                            <label><input type="checkbox" value="black olives"> Black Olives</label>
+                            <label><input type="checkbox" value="cheddar cheese"> Cheddar Cheese</label>
+                            <label><input type="checkbox" value="corns"> Corns</label>
+                            <label><input type="checkbox" value="green olives"> Green Olives</label>
+                            <label><input type="checkbox" value="green pepper"> Green Pepper</label>
+                            <label><input type="checkbox" value="jalapeno"> Jalapeno</label>
+                            <label><input type="checkbox" value="mushrooms"> Mushrooms</label>
+                            <label><input type="checkbox" value="onions"> Onions</label>
+                            <label><input type="checkbox" value="pepperoni"> Pepperoni</label>
+                            <label><input type="checkbox" value="pineapple"> Pineapple</label>
+                            <label><input type="checkbox" value="salami"> Salami</label>
+                            <label><input type="checkbox" value="shrimps"> Shrimps</label>
+                            <label><input type="checkbox" value="tomatoes"> Tomatoes</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="pizza-price-${i}">Price (₺):</label>
+                        <input type="number" id="pizza-price-${i}" placeholder="Enter pizza price" required min="0.01" step="0.01">
+                    </div>
+                    <div class="button-group">
+                        <button type="button" onclick="prevStep()">Back</button>
+                        <button type="button" onclick="nextStep()">Next</button>
+                    </div>
+                `;
+                pizzaFieldsContainer.appendChild(pizzaDiv);
+
+                const ingredientCheckboxes = document.querySelectorAll(`#pizza-ingredients-${i} input[type="checkbox"]`);
+                ingredientCheckboxes.forEach((checkbox) => {
+                    checkbox.addEventListener('change', function() {
+                        const selectedIngredients = Array.from(ingredientCheckboxes)
+                            .filter(input => input.checked);
+                        if (selectedIngredients.length > 4) {
+                            checkbox.checked = false;
+                            alert('You can select up to 4 ingredients only.');
+                        }
+                    });
+                });
+            }
+        }
+
+        document.getElementById('pizza-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form from reloading the page
+
+            // Get user inputs
+            const storeName = document.getElementById('store-name').value;
+            const storeSlogan = document.getElementById('store-slogan').value;
+            const pizzaCount = parseInt(document.getElementById('pizza-count').value);
+            const pizzaMenu = [];
+            for (let i = 1; i <= pizzaCount; i++) {
+                const name = document.getElementById(`pizza-name-${i}`).value;
+                const price = parseFloat(document.getElementById(`pizza-price-${i}`).value);
+                if (isNaN(price) || price <= 0) {
+                    alert(`Please enter a valid price for Pizza ${i}`);
+                    return;
+                }
+                const ingredients = ['crust', 'pizza sauce'].concat(Array.from(
+                    document.querySelectorAll(`#pizza-ingredients-${i} input[type="checkbox"]:checked`)
+                ).map(input => input.value)); // Extract ingredient names
+
+                pizzaMenu.push({ name, price: price.toFixed(2), ingredients });
+            }
+
+            const drinksMenu = Array.from(
+                document.querySelectorAll('#drinks-menu input[type="checkbox"]:checked')
+            ).map(input => {
+                const [name, price] = input.value.split(', ');
+                return { name, price: parseFloat(price).toFixed(2) };
+            });
+
+            // Populate output
+            const outputDiv = document.getElementById('output');
+            document.getElementById('output-store-name').textContent = storeName;
+            document.getElementById('output-store-slogan').textContent = storeSlogan;
+
+            // Populate pizza menu
+            const pizzaMenuDiv = document.getElementById('output-pizza-menu');
+            pizzaMenuDiv.innerHTML = '';
+            pizzaMenu.forEach(pizza => {
+                const pizzaItem = document.createElement('div');
+                pizzaItem.className = 'pizza-item';
+                const img = document.createElement('img');
+                img.alt = pizza.name;
+                pizzaItem.appendChild(img);
+                const textDiv = document.createElement('div');
+                textDiv.innerHTML = `<h4>${pizza.name} - ₺${pizza.price}</h4><p>Ingredients: ${pizza.ingredients.join(', ')}</p>`;
+                pizzaItem.appendChild(textDiv);
+                pizzaMenuDiv.appendChild(pizzaItem);
+                generatePizzaImage(pizza.ingredients, img);
+            });
+
+            // Populate drinks menu
+            const drinksMenuList = document.getElementById('output-drinks-menu');
+            drinksMenuList.innerHTML = '';
+            drinksMenu.forEach(drink => {
+                const drinkItem = document.createElement('li');
+                drinkItem.textContent = `${drink.name} - ₺${drink.price}`;
+                drinksMenuList.appendChild(drinkItem);
+            });
+
+            // Show the output section
+            outputDiv.style.display = 'block';
+        });
+
+        function generatePizzaImage(ingredients, imgElement) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const ingredientUrls = {
+                'anchovies': 'https://elifabozaci.github.io/pizzapizzapizza/images/anchovies.png',
+                'bacon': 'https://elifabozaci.github.io/pizzapizzapizza/images/bacon.png',
+                'basil leaves': 'https://elifabozaci.github.io/pizzapizzapizza/images/basil%20leaves.png',
+                'black olives': 'https://elifabozaci.github.io/pizzapizzapizza/images/black%20olives.png',
+                'cheddar cheese': 'https://elifabozaci.github.io/pizzapizzapizza/images/cheddar%20cheese.png',
+                'corns': 'https://elifabozaci.github.io/pizzapizzapizza/images/corns.png',
+                'crust': 'https://elifabozaci.github.io/pizzapizzapizza/images/crust.png',
+                'green olives': 'https://elifabozaci.github.io/pizzapizzapizza/images/green%20olives.png',
+                'green pepper': 'https://elifabozaci.github.io/pizzapizzapizza/images/green%20pepper.png',
+                'jalapeno': 'https://elifabozaci.github.io/pizzapizzapizza/images/jalapeno.png',
+                'mushrooms': 'https://elifabozaci.github.io/pizzapizzapizza/images/mushrooms.png',
+                'onions': 'https://elifabozaci.github.io/pizzapizzapizza/images/onions.png',
+                'pepperoni': 'https://elifabozaci.github.io/pizzapizzapizza/images/pepperoni.png',
+                'pineapple': 'https://elifabozaci.github.io/pizzapizzapizza/images/pineapple.png',
+                'pizza sauce': 'https://elifabozaci.github.io/pizzapizzapizza/images/pizza%20sauce.png',
+                'salami': 'https://elifabozaci.github.io/pizzapizzapizza/images/salami.png',
+                'shrimps': 'https://elifabozaci.github.io/pizzapizzapizza/images/shrimps.png',
+                'tomatoes': 'https://elifabozaci.github.io/pizzapizzapizza/images/tomatoes.png'
+            };
+
+            let loadedImages = 0;
+            ingredients.forEach((ingredient, index) => {
+                const img = new Image();
+                img.src = ingredientUrls[ingredient];
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    loadedImages++;
+                    if (loadedImages === ingredients.length) {
+                        const dataURL = canvas.toDataURL();
+                        imgElement.src = dataURL;
+                    }
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load image for ${ingredient}`);
+                };
+            });
+        }
+
+        document.getElementById('pizza-count').addEventListener('change', function() {
+            const pizzaCount = parseInt(document.getElementById('pizza-count').value);
+            generatePizzaFields(pizzaCount);
+        });
+    </script>
+</body>
+</html>
